@@ -15,4 +15,13 @@ describe("package", () => {
     expect(packageJson).not.toHaveProperty("exports")
     expect(cliSource.startsWith("#!/usr/bin/env node\n")).toBe(true)
   })
+
+  test("keeps text files on LF across operating systems", async () => {
+    const attributes = await readFile(
+      new URL(".gitattributes", projectRoot),
+      "utf8",
+    )
+
+    expect(attributes).toContain("* text=auto eol=lf")
+  })
 })
