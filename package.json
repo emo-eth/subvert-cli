@@ -1,0 +1,61 @@
+{
+  "name": "subvert-cli",
+  "version": "0.1.0",
+  "description": "Case-preserving, brace-aware search and replace for files and streams.",
+  "type": "module",
+  "bin": {
+    "subvert": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@11.11.0",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emo-eth/subvert-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/emo-eth/subvert-cli/issues"
+  },
+  "homepage": "https://github.com/emo-eth/subvert-cli#readme",
+  "keywords": [
+    "cli",
+    "codemod",
+    "rename",
+    "replace",
+    "search",
+    "vim-abolish"
+  ],
+  "author": "James Wenzel",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "diff": "^9.0.0",
+    "globby": "^16.2.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.7",
+    "@types/node": "^24.10.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

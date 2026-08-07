@@ -1,0 +1,62 @@
+name: Publish release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - name: Use the package npm version
+        run: npm install --global npm@11.11.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify
+        run: npm run verify
+      - name: Validate release tag
+        shell: bash
+        run: |
+          version=$(node --print "require('./package.json').version")
+          if [[ "${GITHUB_REF_NAME}" != "v${version}" ]]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match package version ${version}." >&2
+            exit 1
+          fi
+      - name: Check npm version
+        id: npm-version
+        shell: bash
+        run: |
+          package=$(node --print "require('./package.json').name")
+          version=$(node --print "require('./package.json').version")
+          set +e
+          output=$(npm view "${package}@${version}" version 2>&1)
+          status=$?
+          set -e
+          if [[ ${status} -eq 0 ]]; then
+            echo "${package}@${version} is already published; skipping npm publish."
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+          elif grep -q "E404" <<< "${output}"; then
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "${output}" >&2
+            exit "${status}"
+          fi
+      - name: Publish to npm
+        if: steps.npm-version.outputs.publish == 'true'
+        run: npm publish --access public
