@@ -1,3 +1,4 @@
+import { createRequire } from "node:module"
 import { parseArgs } from "node:util"
 import {
   type CaseMode,
@@ -12,6 +13,10 @@ import {
   type SkippedFile,
 } from "./files.js"
 import { type BoundaryMode, transformText } from "./transform.js"
+
+const packageJson = createRequire(import.meta.url)("../package.json") as {
+  version: string
+}
 
 export interface CliIo {
   cwd: string
@@ -45,6 +50,7 @@ OPTIONS
       --boundary identifier|anywhere|word  Match boundary (default: identifier)
       --hidden                             Include hidden files during folder scans
       --no-ignore                          Do not apply .gitignore rules
+      --version                            Show the installed version
   -h, --help                               Show this help
 
 CASE AND STYLES
@@ -75,6 +81,7 @@ const cliOptions = {
   hidden: { type: "boolean" },
   "no-ignore": { type: "boolean" },
   help: { type: "boolean", short: "h" },
+  version: { type: "boolean" },
 } as const
 
 function parseCommandLine(args: string[]) {
@@ -93,6 +100,11 @@ export async function runCli(args: string[], io: CliIo): Promise<number> {
   } catch (error) {
     io.writeStderr(`subvert: ${errorMessage(error)}\n`)
     return 2
+  }
+
+  if (parsed.values.version) {
+    io.writeStdout(`${packageJson.version}\n`)
+    return 0
   }
 
   if (parsed.values.help) {

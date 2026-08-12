@@ -63,12 +63,26 @@ describe("runCli", () => {
       "Usage: subvert [OPTIONS] FROM TO [PATH...]",
     )
     expect(result.stdout).toContain("--boundary identifier|anywhere|word")
+    expect(result.stdout).toContain("--version")
     expect(result.stdout).toContain("HOW IT WORKS")
     expect(result.stdout).toContain("EXAMPLES")
     expect(result.stdout).toContain(
       "printf 'Facility facilities\\n' | subvert 'facilit{y,ies}' 'building{,s}'",
     )
     expect(result.stderr).toBe("")
+  })
+
+  test("prints the package version without requiring patterns", async () => {
+    const packageJson = JSON.parse(
+      await readFile(new URL("../package.json", import.meta.url), "utf8"),
+    ) as { version: string }
+    const result = await run(["--version"])
+
+    expect(result).toEqual({
+      exitCode: 0,
+      stdout: `${packageJson.version}\n`,
+      stderr: "",
+    })
   })
 
   test("applies explicit case, style, and boundary options in filter mode", async () => {

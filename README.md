@@ -33,6 +33,7 @@ subvert [OPTIONS] FROM TO [PATH...]
       --boundary identifier|anywhere|word  Match boundary (default: identifier)
       --hidden                             Include hidden files during folder scans
       --no-ignore                          Do not apply .gitignore rules
+      --version                             Show the installed version
   -h, --help                               Show help
 ```
 
