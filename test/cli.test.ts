@@ -63,6 +63,11 @@ describe("runCli", () => {
       "Usage: subvert [OPTIONS] FROM TO [PATH...]",
     )
     expect(result.stdout).toContain("--boundary identifier|anywhere|word")
+    expect(result.stdout).toContain("HOW IT WORKS")
+    expect(result.stdout).toContain("EXAMPLES")
+    expect(result.stdout).toContain(
+      "printf 'Facility facilities\\n' | subvert 'facilit{y,ies}' 'building{,s}'",
+    )
     expect(result.stderr).toBe("")
   })
 

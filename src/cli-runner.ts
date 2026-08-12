@@ -22,9 +22,23 @@ export interface CliIo {
 
 const usage = `Usage: subvert [OPTIONS] FROM TO [PATH...]
 
-Case-preserving, brace-aware search and replace for files and streams.
+Case-preserving, brace-aware search and replace for files and streams,
+inspired by vim-abolish :Subvert. Every change is previewed as a unified diff;
+files are written only when you pass --write.
 
-Options:
+HOW IT WORKS
+FROM and TO are literal text, not regular expressions. TO may contain brace
+groups ({a,b}) that create several source -> target pairs at once, useful for
+plurals: 'facilit{y,ies}' -> 'building{,s}'. Each pair is then expanded into
+the case and identifier-style forms you choose and replaced exactly. Longer
+overlapping sources win, so replacements never cascade into each other.
+
+SYNTAX
+  FROM   literal text to find (may contain {a,b} brace groups)
+  TO     literal replacement (a brace group may be empty: {} copies the source)
+  PATH   files and folders to scan; omit to read stdin and write stdout
+
+OPTIONS
       --write                              Apply changes instead of printing a diff
       --case abolish|exact                 Case mapping mode (default: abolish)
       --styles LIST                        camel,pascal,snake,upper-snake,kebab,dot or identifier
@@ -32,6 +46,25 @@ Options:
       --hidden                             Include hidden files during folder scans
       --no-ignore                          Do not apply .gitignore rules
   -h, --help                               Show this help
+
+CASE AND STYLES
+--case abolish (default) also matches the lowercase, initial-capital, and
+uppercase forms of each pair (facility, Facility, FACILITY). --styles
+identifier (short for all six styles) matches camelCase, PascalCase,
+snake_case, UPPER_SNAKE, kebab-case, and dot.case at the same time, so one
+command renames every spelling of a name.
+
+EXAMPLES
+  Preview a rename in a folder (read-only, prints a diff):
+    subvert facility building src
+  Apply the same rename:
+    subvert --write facility building src
+  Rename a name in every identifier style at once:
+    subvert --case exact --styles identifier user_profile account_record src
+  Plurals with brace pairs:
+    subvert 'facilit{y,ies}' 'building{,s}' src
+  Transform standard input (--write is not allowed in this mode):
+    printf 'Facility facilities\\n' | subvert 'facilit{y,ies}' 'building{,s}'
 `
 
 const cliOptions = {

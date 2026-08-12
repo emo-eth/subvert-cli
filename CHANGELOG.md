@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-08-11
+
+- Expand `--help` to explain how replacing works (literal brace pairs, case and
+  identifier-style expansion) and to show usage examples.
+
 ## 0.1.0 - 2026-08-07
 
 - Add literal Abolish brace-pair expansion.

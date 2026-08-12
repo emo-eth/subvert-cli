@@ -1,6 +1,6 @@
 {
   "name": "subvert-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Case-preserving, brace-aware search and replace for files and streams.",
   "type": "module",
   "bin": {
