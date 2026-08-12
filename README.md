@@ -211,6 +211,17 @@ Subvert reads and transforms every candidate before it writes any file. Existing
 
 `subvert-cli` is a command-line package only. It does not provide a public JavaScript or TypeScript library interface, and it does not publish type declarations.
 
+## Agent skill
+
+This repository ships an agent skill for driving `subvert` safely. It lives in
+`skills/subvert/SKILL.md` and describes the preview-first workflow, the option
+flags, the `npx` brace-group quirk, and the file-safety defaults. It is not
+part of the npm package. Install it with:
+
+```sh
+npx skills add emo-eth/subvert-cli --skill subvert
+```
+
 ## Credit and license
 
 The brace-pair and case-preserving behavior is inspired by Tim Pope's [vim-abolish](https://github.com/tpope/vim-abolish). This project is an independent command-line implementation and is not affiliated with vim-abolish.
