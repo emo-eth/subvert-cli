@@ -23,6 +23,8 @@ export interface CliIo {
   readStdin: () => Promise<string>
   writeStdout: (text: string) => void
   writeStderr: (text: string) => void
+  /** True when standard input is an interactive terminal. */
+  stdinIsTTY?: boolean
 }
 
 const usage = `Usage: subvert [OPTIONS] FROM TO [PATH...]
@@ -43,6 +45,8 @@ SYNTAX
   TO     literal replacement (a brace group may be empty: {} copies the source)
   PATH   files and folders to scan; omit to read stdin and write stdout
 
+Quote FROM and TO so the shell does not expand {a,b} brace groups.
+
 OPTIONS
       --write                              Apply changes instead of printing a diff
       --case abolish|exact                 Case mapping mode (default: abolish)
@@ -50,7 +54,7 @@ OPTIONS
       --boundary identifier|anywhere|word  Match boundary (default: identifier)
       --hidden                             Include hidden files during folder scans
       --no-ignore                          Do not apply .gitignore rules
-      --version                            Show the installed version
+  -V, --version                            Show the installed version
   -h, --help                               Show this help
 
 CASE AND STYLES
@@ -71,6 +75,17 @@ EXAMPLES
     subvert 'facilit{y,ies}' 'building{,s}' src
   Transform standard input (--write is not allowed in this mode):
     printf 'Facility facilities\\n' | subvert 'facilit{y,ies}' 'building{,s}'
+
+SAFETY
+Preview mode (the default) writes nothing. Folder scans honor .gitignore,
+skip hidden files, never traverse .git metadata, never follow symbolic links,
+and skip binary data or invalid UTF-8 with a warning. Every file is read and
+planned before any file is written. Line endings and permissions are kept.
+
+EXIT CODES
+  0  Success, including when nothing matched (check the summary line)
+  1  A file could not be read, planned, or written
+  2  Invalid options or patterns
 `
 
 const cliOptions = {
@@ -81,7 +96,7 @@ const cliOptions = {
   hidden: { type: "boolean" },
   "no-ignore": { type: "boolean" },
   help: { type: "boolean", short: "h" },
-  version: { type: "boolean" },
+  version: { type: "boolean", short: "V" },
 } as const
 
 function parseCommandLine(args: string[]) {
@@ -114,7 +129,9 @@ export async function runCli(args: string[], io: CliIo): Promise<number> {
 
   const [from, to, ...paths] = parsed.positionals
   if (from === undefined || to === undefined) {
-    io.writeStderr("subvert: FROM and TO are required\n")
+    io.writeStderr(
+      "subvert: FROM and TO are required\nTry 'subvert --help' for usage.\n",
+    )
     return 2
   }
 
@@ -135,6 +152,12 @@ export async function runCli(args: string[], io: CliIo): Promise<number> {
       io.writeStderr("subvert: --write requires at least one PATH\n")
       return 2
     }
+    if (io.stdinIsTTY === true) {
+      io.writeStderr(
+        "subvert: pass one or more PATH arguments, or pipe text on standard input\n",
+      )
+      return 2
+    }
     const input = await io.readStdin()
     io.writeStdout(transformText(input, replacements, boundary).text)
     return 0
@@ -153,18 +176,24 @@ export async function runCli(args: string[], io: CliIo): Promise<number> {
       (total, change) => total + change.count,
       0,
     )
-    const totals = `${formatCount(replacementCount, "replacement")} in ${formatCount(plan.changes.length, "file")}`
+    const scannedCount = discovery.files.length - plan.skipped.length
+    if (replacementCount === 0) {
+      const noMatches = `subvert: no matches found in ${formatCount(scannedCount, "file")}`
+      io.writeStderr(
+        parsed.values.write
+          ? `${noMatches}; no files changed\n`
+          : `${noMatches}\n`,
+      )
+      return 0
+    }
+    const totals = `${formatCount(replacementCount, "replacement")} in ${plan.changes.length} of ${formatCount(scannedCount, "file")}`
     if (parsed.values.write) {
       await applyFileChanges(plan.changes)
-      io.writeStderr(
-        `subvert: ${totals}; ${plan.changes.length > 0 ? "files updated" : "no files changed"}\n`,
-      )
+      io.writeStderr(`subvert: ${totals}; files updated\n`)
     } else {
       const diff = renderUnifiedDiff(plan.changes, io.cwd)
       if (diff !== "") io.writeStdout(`${diff}\n`)
-      io.writeStderr(
-        `subvert: ${totals}; preview only${plan.changes.length > 0 ? ", use --write to apply" : ""}\n`,
-      )
+      io.writeStderr(`subvert: ${totals}; preview only, use --write to apply\n`)
     }
     return 0
   } catch (error) {

@@ -4,6 +4,7 @@ import { type CliIo, runCli } from "./cli-runner.js"
 
 const io: CliIo = {
   cwd: process.cwd(),
+  stdinIsTTY: process.stdin.isTTY === true,
   readStdin: readStandardInput,
   writeStdout: (text) => {
     process.stdout.write(text)

@@ -1,3 +1,4 @@
+import type { Stats } from "node:fs"
 import { lstat, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { createTwoFilesPatch } from "diff"
@@ -126,7 +127,15 @@ export async function discoverFiles(
       continue
     }
 
-    const stats = await lstat(absolute)
+    let stats: Stats
+    try {
+      stats = await lstat(absolute)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error(`path not found: ${input}`)
+      }
+      throw error
+    }
     if (stats.isSymbolicLink()) {
       skipped.push({ path: absolute, reason: "symbolic-link" })
       continue

@@ -24,11 +24,13 @@ async function run(
   args: string[],
   stdin = "",
   cwd = process.cwd(),
+  stdinIsTTY = false,
 ): Promise<CliResult> {
   let stdout = ""
   let stderr = ""
   const io: CliIo = {
     cwd,
+    stdinIsTTY,
     readStdin: async () => stdin,
     writeStdout: (text) => {
       stdout += text
@@ -63,8 +65,10 @@ describe("runCli", () => {
       "Usage: subvert [OPTIONS] FROM TO [PATH...]",
     )
     expect(result.stdout).toContain("--boundary identifier|anywhere|word")
-    expect(result.stdout).toContain("--version")
+    expect(result.stdout).toContain("-V, --version")
     expect(result.stdout).toContain("HOW IT WORKS")
+    expect(result.stdout).toContain("SAFETY")
+    expect(result.stdout).toContain("EXIT CODES")
     expect(result.stdout).toContain("EXAMPLES")
     expect(result.stdout).toContain(
       "printf 'Facility facilities\\n' | subvert 'facilit{y,ies}' 'building{,s}'",
@@ -77,12 +81,14 @@ describe("runCli", () => {
       await readFile(new URL("../package.json", import.meta.url), "utf8"),
     ) as { version: string }
     const result = await run(["--version"])
+    const shortResult = await run(["-V"])
 
     expect(result).toEqual({
       exitCode: 0,
       stdout: `${packageJson.version}\n`,
       stderr: "",
     })
+    expect(shortResult).toEqual(result)
   })
 
   test("applies explicit case, style, and boundary options in filter mode", async () => {
@@ -120,7 +126,7 @@ describe("runCli", () => {
     expect(result.stdout).toContain("-box")
     expect(result.stdout).toContain("+bag")
     expect(result.stderr).toBe(
-      "subvert: 1 replacement in 1 file; preview only, use --write to apply\n",
+      "subvert: 1 replacement in 1 of 1 file; preview only, use --write to apply\n",
     )
     expect(await readFile(file, "utf8")).toBe("box\nmailbox\n")
   })
@@ -136,7 +142,7 @@ describe("runCli", () => {
     expect(result).toEqual({
       exitCode: 0,
       stdout: "",
-      stderr: "subvert: 1 replacement in 1 file; files updated\n",
+      stderr: "subvert: 1 replacement in 1 of 1 file; files updated\n",
     })
     expect(await readFile(file, "utf8")).toBe("bag\nmailbox\n")
   })
@@ -151,10 +157,43 @@ describe("runCli", () => {
     })
   })
 
+  test("reports no matches with the scanned file count", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "subvert-cli-"))
+    temporaryDirectories.push(root)
+    await writeFile(path.join(root, "example.txt"), "box\n")
+
+    const preview = await run(["zebra", "yak", "."], "", root)
+    expect(preview).toEqual({
+      exitCode: 0,
+      stdout: "",
+      stderr: "subvert: no matches found in 1 file\n",
+    })
+
+    const write = await run(["--write", "zebra", "yak", "."], "", root)
+    expect(write).toEqual({
+      exitCode: 0,
+      stdout: "",
+      stderr: "subvert: no matches found in 1 file; no files changed\n",
+    })
+  })
+
+  test("refuses to read from an interactive terminal without paths", async () => {
+    const result = await run(["box", "bag"], "", process.cwd(), true)
+
+    expect(result).toEqual({
+      exitCode: 2,
+      stdout: "",
+      stderr:
+        "subvert: pass one or more PATH arguments, or pipe text on standard input\n",
+    })
+  })
+
   test("uses invalid-input and file-failure exit codes", async () => {
     const missingPattern = await run(["box"])
     expect(missingPattern.exitCode).toBe(2)
-    expect(missingPattern.stderr).toBe("subvert: FROM and TO are required\n")
+    expect(missingPattern.stderr).toBe(
+      "subvert: FROM and TO are required\nTry 'subvert --help' for usage.\n",
+    )
 
     const invalidOption = await run(["--case", "strange", "box", "bag"])
     expect(invalidOption.exitCode).toBe(2)
@@ -162,6 +201,8 @@ describe("runCli", () => {
 
     const missingFile = await run(["box", "bag", "does-not-exist.txt"])
     expect(missingFile.exitCode).toBe(1)
-    expect(missingFile.stderr).toContain("does-not-exist.txt")
+    expect(missingFile.stderr).toBe(
+      "subvert: path not found: does-not-exist.txt\n",
+    )
   })
 })

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Add `-V` as a short alias for `--version`.
+- Show scanned file counts in summaries (`3 replacements in 2 of 12 files`)
+  and print `no matches found in N files` when nothing matched.
+- Replace the raw `ENOENT` error with `path not found: <path>`.
+- Print a usage hint when `FROM` and `TO` are missing, and refuse to wait on
+  an interactive terminal when no paths and no piped input are given.
+- Expand `--help` with quoting guidance, safety guarantees, and exit codes.
+- Rewrite the README with a quick start, a safe preview-first workflow, an
+  audit trail tip, and troubleshooting (including the `npx` brace-group bug).
+
 ## 0.1.2 - 2026-08-12
 
 - Add `--version` to print the installed package version.
