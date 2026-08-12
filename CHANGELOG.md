@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 - 2026-08-12
+
+- Co-locate the `subvert` agent skill in this repository under `skills/`.
+  It ships with the source (not in the npm package) and is installed with
+  `npx skills add emo-eth/subvert-cli --skill subvert`.
+
 ## 0.1.3 - 2026-08-12
 
 - Add `-V` as a short alias for `--version`.
