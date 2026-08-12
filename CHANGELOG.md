@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3 - 2026-08-12
 
 - Add `-V` as a short alias for `--version`.
 - Show scanned file counts in summaries (`3 replacements in 2 of 12 files`)
