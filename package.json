@@ -16,7 +16,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "npm@11.11.0",
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "test": "vitest run",
@@ -24,8 +24,8 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build",
-    "prepack": "npm run build"
+    "verify": "bun run lint && bun run typecheck && bun run test && bun run build",
+    "prepack": "bun run build"
   },
   "repository": {
     "type": "git",
