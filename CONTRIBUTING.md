@@ -2,16 +2,16 @@
 
 ## Requirements
 
-- Node.js 22 or newer
-- npm 11 or newer
+- Bun 1.4.4 or newer (see `packageManager` in `package.json`)
+- Node.js 22 or newer (runtime engine for the published CLI)
 
 ## Set up
 
 ```sh
 git clone https://github.com/emo-eth/subvert-cli.git
 cd subvert-cli
-npm ci
-npm run verify
+bun install --frozen-lockfile
+bun run verify
 ```
 
 ## Make a change
@@ -21,10 +21,10 @@ Add or update a test before you change behavior. Keep file operations safe by de
 Run all checks before you open a pull request:
 
 ```sh
-npm run verify
+bun run verify
 ```
 
-Use `npm pack --dry-run` to inspect the published files when you change package metadata or build output.
+Use `npm pack --dry-run` to inspect the published files when you change package metadata or build output. Publishing still uses npm trusted publishing; `prepack` runs `bun run build`, so Bun must be on `PATH` when `npm publish` runs.
 
 ## Release
 
@@ -40,9 +40,9 @@ git push origin v0.1.3
 
 The tag workflow automatically:
 
-1. Sets `package.json` and `package-lock.json` to the tag version.
-2. Runs `npm run verify`.
-3. Publishes that version to npm.
+1. Sets `package.json` to the tag version.
+2. Installs with `bun install --frozen-lockfile` and runs `bun run verify`.
+3. Publishes that version to npm with `npm publish` (OIDC trusted publishing).
 4. Creates a GitHub Release with generated notes.
 
 Use a new `vMAJOR.MINOR.PATCH` tag for each release. Do not create the GitHub

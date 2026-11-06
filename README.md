@@ -31,6 +31,17 @@ npm install --global subvert-cli
 
 The npm package provides the `subvert` command.
 
+## Development
+
+This repository uses Bun for install, scripts, and CI. Node.js 22+ remains the
+runtime for the published CLI. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[AGENTS.md](AGENTS.md).
+
+```sh
+bun install --frozen-lockfile
+bun run verify
+```
+
 ## Usage
 
 ```text
